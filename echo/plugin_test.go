@@ -14,21 +14,26 @@ import (
 	echoPlugin "github.com/bongnv/sen-plugins/echo"
 )
 
+type mockPlugin struct {
+	Echo *echo.Echo `inject:"echo"`
+}
+
+func (p mockPlugin) Initialize() error {
+	return nil
+}
+
 func TestPlugin(t *testing.T) {
 	t.Run("should inject *echo.Echo to the app", func(t *testing.T) {
 		app := sen.New()
-		err := app.With(echoPlugin.Plugin())
+		m := &mockPlugin{}
+
+		err := app.With(echoPlugin.Module(), m)
 		if err != nil {
 			t.Errorf("Expected no error but got: %v", err)
 		}
 
-		e, err := app.Retrieve("echo")
-		if err != nil {
-			t.Errorf("Expected no error but got: %v", err)
-		}
-		_, ok := e.(*echo.Echo)
-		if !ok {
-			t.Errorf("Expected *echo.Echo but got %T", e)
+		if m.Echo == nil {
+			t.Errorf("Expected Echo to be populated")
 		}
 	})
 
@@ -37,15 +42,15 @@ func TestPlugin(t *testing.T) {
 		doneCh := make(chan struct{})
 
 		app := sen.New()
-		err := app.With(echoPlugin.Plugin())
+		err := app.With(echoPlugin.Module())
 		if err != nil {
 			t.Errorf("Expected no error but got: %v", err)
 		}
 
-		app.OnRun(func(_ context.Context) error {
+		_ = app.With(sen.OnRun(func(_ context.Context) error {
 			hook1Called++
 			return errors.New("run error")
-		})
+		}))
 
 		go func() {
 			err := app.Run(context.Background())

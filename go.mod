@@ -3,7 +3,8 @@ module github.com/bongnv/sen-plugins
 go 1.20
 
 require (
-	github.com/bongnv/sen v0.2.0
+	github.com/bongnv/sen v0.3.0
+	github.com/caarlos0/env/v8 v8.0.0
 	github.com/labstack/echo/v4 v4.10.2
 	go.uber.org/zap v1.24.0
 )
