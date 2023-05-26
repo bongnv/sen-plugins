@@ -8,30 +8,31 @@ import (
 	"github.com/bongnv/sen"
 )
 
-// Plugin creates a new sen plugin that provides zap logger.
-func Plugin(options ...zap.Option) sen.Plugin {
-	return &zapPlugin{
-		options: options,
-	}
-}
+// Plugin is a sen.Plugin that provides an instance of *zap.Logger.
+//
+// # Usage
+//
+//	app.With(&zap.Plugin{
+//		Options: zapOptions,
+//	})
+type Plugin struct {
+	Options []zap.Option
 
-type zapPlugin struct {
-	App *sen.Application `inject:"app"`
-
-	options []zap.Option
+	LC       sen.Lifecycle `inject:"lifecycle"`
+	Injector sen.Injector  `inject:"injector"`
 }
 
 // Initialize initialises zap logger for the application.
 // The logger will be regisreted under "logger" tag.
-func (p *zapPlugin) Initialize() error {
-	logger, err := zap.NewProduction(p.options...)
+func (p Plugin) Initialize() error {
+	logger, err := zap.NewProduction(p.Options...)
 	if err != nil {
 		return err
 	}
 
-	p.App.AfterRun(func(_ context.Context) error {
+	p.LC.AfterRun(func(_ context.Context) error {
 		return logger.Sync()
 	})
 
-	return p.App.Register("logger", logger)
+	return p.Injector.Register("logger", logger)
 }
